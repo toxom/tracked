@@ -1,0 +1,31 @@
+# Node modules
+node_modules/
+
+# Build and output folders
+.output/
+.vercel/
+.netlify/
+.wrangler/
+.svelte-kit/
+build/
+dist/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Svelte env files (in app/src)
+app/src/.env
+app/src/.env.*
+
+# Optional: allow example/test envs to be tracked
+!app/src/.env.example
+!app/src/.env.test
+
+# PocketBase data and binary (database)
+.DS_Store
+pb/pb_data/
+pb/pocketbase
