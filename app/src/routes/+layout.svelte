@@ -1,20 +1,22 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { onMount } from 'svelte';
+    import { navigating } from '$app/stores';
+    import { onMount, afterUpdate } from 'svelte';
+    import { headerControls } from '$lib/stores/headerControlsStore';
     
     // Active route tracking
     $: activeRoute = $page.url.pathname;
     
     // Sidebar navigation items
     const navItems = [
-      { icon: '⏱️', label: 'Time tracking', path: '/' },
+      { icon: '⏱️', label: 'User', path: '/' },
+      { icon: '⏱️', label: 'Time tracking', path: '/tracking' },
       { icon: '📋', label: 'Tasks', path: '/tasks' },
       { icon: '🏷️', label: 'Tags', path: '/tags' },
-      { icon: '🔍', label: 'Jobs', path: '/jobs' },
+      { icon: '🔍', label: 'Projects', path: '/projects' },
       { icon: '🔍', label: 'People', path: '/people' },
       { icon: '📊', label: 'Analytics', path: '/analytics' },
       { icon: '📤', label: 'Export', path: '/export' },
-
     ];
     
     const bottomNavItems = [
@@ -24,8 +26,21 @@
     ];
     
     let currentDateTime = new Date();
+    let lastNavigationPath = '';
+    
+    // Debug navigation changes
+    $: if ($navigating) {
+      console.log('Navigating from:', $navigating.from?.url.pathname, 'to:', $navigating.to?.url.pathname);
+      lastNavigationPath = $navigating.to?.url.pathname || '';
+    }
+    
+    // Track page changes
+    $: if (activeRoute && activeRoute !== lastNavigationPath) {
+      console.log('Route changed to:', activeRoute);
+    }
     
     onMount(() => {
+      console.log('Layout mounted, initial path:', activeRoute);
       const timer = setInterval(() => {
         currentDateTime = new Date();
       }, 1000);
@@ -33,6 +48,10 @@
       return () => {
         clearInterval(timer);
       };
+    });
+    
+    afterUpdate(() => {
+      console.log('Layout updated, current path:', activeRoute);
     });
     
     function formatTime(date: Date): string {
@@ -54,6 +73,8 @@
           <a 
             href={item.path} 
             class="nav-item {activeRoute === item.path ? 'active' : ''}"
+            data-sveltekit-preload-data="hover"
+            data-sveltekit-noscroll
           >
             <span class="icon">{item.icon}</span>
             <span class="label">{item.label}</span>
@@ -66,6 +87,8 @@
           <a 
             href={item.path} 
             class="nav-item {activeRoute === item.path ? 'active' : ''}"
+            data-sveltekit-preload-data="hover"
+            data-sveltekit-noscroll
           >
             <span class="icon">{item.icon}</span>
             <span class="label">{item.label}</span>
@@ -78,9 +101,15 @@
     <main class="main-content">
       <header class="header">
         <div class="header-controls">
-          <button class="control-btn">+</button>
-          <button class="control-btn">⏸️</button>
-          <button class="control-btn">⏹️</button>
+          {#each $headerControls as control}
+            <button 
+              class="control-btn" 
+              title={control.title} 
+              on:click={control.action}
+            >
+              {control.icon}
+            </button>
+          {/each}
         </div>
         <div class="date-display">
           {currentDateTime.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
@@ -91,7 +120,9 @@
       </header>
       
       <div class="content">
-        <slot />
+        {#key activeRoute}
+          <slot />
+        {/key}
       </div>
     </main>
   </div>
